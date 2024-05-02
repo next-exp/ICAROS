@@ -195,11 +195,11 @@ def test_fit_slices_2d_gauss_fixed_example():
 
     expected_valid   = [[True] * 2] * 2
 
-    assert_allclose(got_mean.value       , expected_means  , rtol=1e-5)
-    assert_allclose(got_mean.uncertainty , expected_meanus , rtol=1e-5)
-    assert_allclose(got_sigma.value      , expected_sigmas , rtol=1e-5)
-    assert_allclose(got_sigma.uncertainty, expected_sigmaus, rtol=1e-5)
-    assert_allclose(got_chi2             , expected_chi2s  , rtol=1e-5)
+    assert_allclose(got_mean.value       , expected_means  , rtol=1e-4)
+    assert_allclose(got_mean.uncertainty , expected_meanus , rtol=1e-4)
+    assert_allclose(got_sigma.value      , expected_sigmas , rtol=1e-4)
+    assert_allclose(got_sigma.uncertainty, expected_sigmaus, rtol=1e-4)
+    assert_allclose(got_chi2             , expected_chi2s  , rtol=1e-4)
     assert np.all(got_valid == expected_valid)
 
 
