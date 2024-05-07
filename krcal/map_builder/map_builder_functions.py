@@ -326,7 +326,7 @@ def band_selector_and_check(dst       : pd.DataFrame,
         input_mask = [True] * len(dst)
     else: pass;
 
-    emaps = e0_xy_correction(boot_map, norm_strategy  = norm_strat)
+    emaps = e0_xy_correction(boot_map, norm_strategy = norm_strat)
     E0    = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values,
                                                dst[input_mask].Y.values)
 

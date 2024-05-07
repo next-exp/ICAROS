@@ -7,8 +7,8 @@ from invisible_cities.types.symbols    import NormStrategy
 from invisible_cities.reco.corrections import get_normalization_factor
 
 
-def e0_xy_correction(map         : ASectorMap                         ,
-                     norm_strategy: NormStrategy   = NormStrategy.max):
+def e0_xy_correction(map          : ASectorMap,
+                     norm_strategy: NormStrategy = NormStrategy.max):
     """
     Temporal function to perfrom IC geometric corrections only
     """

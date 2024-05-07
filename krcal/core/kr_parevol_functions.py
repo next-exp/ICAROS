@@ -90,7 +90,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
     """
 
     ## lt and e0
-    geo_correction_factor = e0_xy_correction(map =  emaps                         ,
+    geo_correction_factor = e0_xy_correction(map           =  emaps,
                                              norm_strategy = NormStrategy.max)
 
     _, _, fr = fit_lifetime_profile(data.Z,
