@@ -39,7 +39,7 @@ from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
 from invisible_cities.reco.corrections     import ASectorMap
 from invisible_cities.reco.corrections     import read_maps
-from invisible_cities.reco.corrections     import norm_strategy
+from invisible_cities.types.symbols        import NormStrategy
 
 
 @dataclass
@@ -277,7 +277,7 @@ def check_rate_and_hist(times      : np.array           ,
 
 def band_selector_and_check(dst       : pd.DataFrame,
                            boot_map   : ASectorMap,
-                           norm_strat : norm_strategy             = norm_strategy.max,
+                           norm_strat : NormStrategy              = NormStrategy.max,
                            input_mask : np.array                  = None,
                            range_Z    : Tuple[np.array, np.array] = (10, 550),
                            range_E    : Tuple[np.array, np.array] = (10.0e+3,14e+3),
@@ -326,7 +326,7 @@ def band_selector_and_check(dst       : pd.DataFrame,
         input_mask = [True] * len(dst)
     else: pass;
 
-    emaps = e0_xy_correction(boot_map, norm_strat  = norm_strat)
+    emaps = e0_xy_correction(boot_map, norm_strategy = norm_strat)
     E0    = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values,
                                                dst[input_mask].Y.values)
 

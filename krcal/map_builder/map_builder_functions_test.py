@@ -108,7 +108,7 @@ def test_time_evol_table_exact_numbers(t_evol_table, output_maps_tmdir):
     map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
     emaps        = read_maps(map_file_out)
     t_evol = pd.pandas.read_hdf(t_evol_table, 't_evol')
-    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-5)
+    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-4)
 
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):

@@ -1,0 +1,41 @@
+# This workflow will install IC and run all the tests with pytest
+
+name: Test suite
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8]
+        #platform: [ubuntu-18.04, macos-latest]
+        platform: [ubuntu-20.04]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get LFS files
+      run: git lfs pull
+    # - name: Fix Conda permissions on macOS
+    #   run: sudo chown -R $UID $CONDA
+    #   if: runner.os == 'macOS'
+    - name: Install IC
+      run: |
+        cd ..
+        git clone https://github.com/next-exp/IC.git
+ 
+    
+    - name: Run tests
+      run: |
+        cd ..
+        source $CONDA/etc/profile.d/conda.sh
+        cd IC
+        source manage.sh work_in_python_version_no_tests ${{ matrix.python-version }}
+        cd ../ICAROS
+        source icaro_setup.sh
+        PYTEST_ADDOPTS=--color=yes HYPOTHESIS_PROFILE=travis-ci pytest -v

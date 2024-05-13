@@ -6,8 +6,8 @@ from . kr_types             import ASectorMap
 from . kr_types             import masks_container
 from . core_functions       import resolution
 
-from invisible_cities.reco .corrections     import apply_all_correction
-from invisible_cities.reco .corrections     import norm_strategy
+from invisible_cities.reco .corrections import apply_all_correction
+from invisible_cities.types.symbols     import NormStrategy
 
 from typing import List
 from typing import Tuple
@@ -90,8 +90,8 @@ def computing_kr_parameters(data       : pd.DataFrame,
     """
 
     ## lt and e0
-    geo_correction_factor = e0_xy_correction(map =  emaps                         ,
-                                             norm_strat = norm_strategy.max)
+    geo_correction_factor = e0_xy_correction(map           =  emaps,
+                                             norm_strategy = NormStrategy.max)
 
     _, _, fr = fit_lifetime_profile(data.Z,
                                     data.S2e.values*geo_correction_factor(
