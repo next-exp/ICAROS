@@ -144,11 +144,22 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
         mLT   = fill_map_ts(tsMap.lt  , ts)
         mE0u  = fill_map_ts(tsMap.e0u , ts)
         mLTu  = fill_map_ts(tsMap.ltu , ts)
-    return ASectorMap(chi2    = pd.DataFrame.from_dict(mChi2),
-                      e0      = pd.DataFrame.from_dict(mE0  ),
-                      lt      = pd.DataFrame.from_dict(mLT  ),
-                      e0u     = pd.DataFrame.from_dict(mE0u ),
-                      ltu     = pd.DataFrame.from_dict(mLTu ),
+
+        df_chi2 = pd.DataFrame.from_dict(mChi2)
+        df_e0   = pd.DataFrame.from_dict(mE0  )
+        df_lt   = pd.DataFrame.from_dict(mLT  )
+        df_e0u  = pd.DataFrame.from_dict(mE0u )
+        df_ltu  = pd.DataFrame.from_dict(mLTu )
+
+        cuts = (df_chi2 > range_chi2[0]) & (df_chi2 < range_chi2[1]) & (df_e0 > range_e[0]) & (df_e0 < range_e[1]) & (df_lt > range_lt[0]) & (df_lt < range_lt[1])
+
+        df_lt   = df_lt[cuts]
+
+    return ASectorMap(chi2    = df_chi2,
+                      e0      = df_e0,
+                      lt      = df_lt,
+                      e0u     = df_e0u,
+                      ltu     = df_ltu,
                       mapinfo = None)
 
 
