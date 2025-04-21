@@ -156,7 +156,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame       ,
     """
     if input_mask is None:
         input_mask = [True] * len(dst)
-    else: pass;
+
     mask             = np.zeros_like(input_mask)
     mask[input_mask] = getattr(dst[input_mask], column.value) == 1
     nevts_after      = dst[mask]      .event.nunique()
@@ -249,6 +249,7 @@ def check_rate_and_hist(times      : np.array           ,
     """
     min_time   = times.min()
     max_time   = times.max()
+
     ntimebins  = get_number_of_time_bins(bin_size,
                                          min_time,
                                          max_time)
@@ -660,7 +661,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                nsigmas_Zdst     : float              ,
                bootstrapmap     : ASectorMap         ,
                band_sel_params  : dict               ,
-               ) -> pd.DataFrame:
+               ) -> (pd.DataFrame, masks_container):
     n0    = dst.event.nunique()
     mask1 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S1_signal         ,
@@ -731,8 +732,7 @@ def map_builder(config):
                                     store_hist_s2    = store_hist             ,
                                     ns2_histo_params = config.ns2_histo_params,
                                     nsigmas_Zdst     = config.nsigmas_Zdst    ,
-                                    ref_Z_histo      = ref_histos.
-                                                           Z_dist_hist,
+                                    ref_Z_histo      = ref_histos.Z_dist_hist ,
                                     bootstrapmap     = bootstrapmap           ,
                                     band_sel_params  = config.band_sel_params )
 
