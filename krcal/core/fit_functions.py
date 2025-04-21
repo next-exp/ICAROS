@@ -1,5 +1,5 @@
 """Module fit_functions.
-This module includes general fit functions 
+This module includes general fit functions
 
 Notes
 -----
@@ -335,10 +335,11 @@ def sigmoid(x          : np.array,
 
 
 def compute_drift_v(zdata    : np.array,
-                    nbins    : int                               = 35,
-                    zrange   : Tuple[float, float]               = (500, 640),
+                    nbins    : int,
+                    zrange   : Tuple[float, float],
+                    detector : str,
                     seed     : Tuple[float, float, float, float] = None,
-                    detector : str                               = 'new')->Tuple[float, float]:
+                    )->Tuple[float, float]:
     """
     Computes the drift velocity for a given distribution
     using the sigmoid function to get the cathode edge.

@@ -117,14 +117,14 @@ def load_data(input_path         : str ,
 
     return dst_filtered, bootstrap_map, ref_histos
 
-def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
-                                   column     : type_of_signal              ,
-                                   interval   : Tuple[float, float]         ,
-                                   output_f   : pd.HDFStore                 ,
-                                   input_mask : np.array            = None  ,
-                                   nbins_hist : int                 = 10    ,
-                                   range_hist : Tuple[float, float] = (0,10),
-                                   norm       : bool = True)->np.array:
+def selection_nS_mask_and_checking(dst        : pd.DataFrame       ,
+                                   column     : type_of_signal     ,
+                                   interval   : Tuple[float, float],
+                                   output_f   : pd.HDFStore        ,
+                                   nbins_hist : int                ,
+                                   range_hist : Tuple[float, float],
+                                   input_mask : np.array = None    ,
+                                   norm       : bool     = True    )->np.array:
     """
     Selects nS1(or nS2) == 1 for a given kr dst and
     returns the mask. It also computes selection efficiency,
@@ -275,17 +275,17 @@ def check_rate_and_hist(times      : np.array           ,
                                 raising_message = message          )
     return;
 
-def band_selector_and_check(dst       : pd.DataFrame,
-                           boot_map   : ASectorMap,
-                           norm_strat : NormStrategy              = NormStrategy.max,
-                           input_mask : np.array                  = None,
-                           range_Z    : Tuple[np.array, np.array] = (10, 550),
-                           range_E    : Tuple[np.array, np.array] = (10.0e+3,14e+3),
-                           nbins_z    : int                       = 50,
-                           nbins_e    : int                       = 50,
-                           nsigma_sel : float                     = 3.5,
-                           eff_min   : float                      = 0.4,
-                           eff_max   : float                      = 0.6
+def band_selector_and_check(dst        : pd.DataFrame             ,
+                            boot_map   : ASectorMap               ,
+                            range_Z    : Tuple[np.array, np.array],
+                            range_E    : Tuple[np.array, np.array],
+                            nbins_z    : int                      ,
+                            nbins_e    : int                      ,
+                            nsigma_sel : float                    ,
+                            eff_min    : float                    ,
+                            eff_max    : float                    ,
+                            norm_strat : NormStrategy = NormStrategy.max,
+                            input_mask : np.array     = None,
                            )->np.array:
     """
     This function returns a selection of the events that
@@ -382,10 +382,10 @@ def calculate_map(dst     : pd.DataFrame,
                   e_range : Tuple[float, float],
                   chi2_range: Tuple[float, float],
                   lt_range: Tuple[float, float],
-                  fit_type: FitType = FitType.unbined,
-                  nmin    : int     = 100,
-                  x_range : Tuple[float, float] = (-200,200),
-                  y_range : Tuple[float, float] = (-200,200)
+                  fit_type: FitType,
+                  nmin    : int,
+                  x_range : Tuple[float, float],
+                  y_range : Tuple[float, float],
                   ):
     """
     Calculates and outputs correction map
@@ -479,9 +479,10 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     return amap
 
 def remove_peripheral(map       : ASectorMap,
-                      nbins     : int   = 100,
-                      rmax      : float = 200,
-                      rfid      : float = 200) -> ASectorMap:
+                      nbins     : int       ,
+                      rmax      : float     ,
+                      rfid      : float     ,
+                      ) -> ASectorMap:
 
     new_map     = deepcopy(map)
     mask_core   = get_core(nbins,rmax, rfid)
@@ -499,7 +500,7 @@ def add_krevol(maps         : ASectorMap,
                nStimeprofile: int,
                x_range      : Tuple[float, float],
                y_range      : Tuple[float, float],
-               XYbins       : Tuple[int, int],
+               XYbins       : Tuple[int, int]    ,
                **kwargs                          ) -> None:
     """
     Adds time evolution dataframe to the map
@@ -603,13 +604,12 @@ def compute_map(dst          : pd.DataFrame,
                 e_range      : Tuple[float, float],
                 chi2_range   : Tuple[float, float],
                 lt_range     : Tuple[float, float],
-                fit_type     : FitType = FitType.unbined,
-                nmin         : int     = 100,
-                maxFailed    : int = 600,
-                r_max        : float = 200,
-                x_range      : Tuple[float, float] = (-200,200),
-                y_range      : Tuple[float, float] = (-200,200),
-                **kwargs                                       ) -> ASectorMap:
+                fit_type     : FitType,
+                nmin         : int,
+                maxFailed    : int,
+                r_max        : float,
+                x_range      : Tuple[float, float],
+                y_range      : Tuple[float, float]) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -645,6 +645,7 @@ def compute_map(dst          : pd.DataFrame,
                                    run_number = int(run_number))
 
     return no_peripheral
+
 
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
@@ -757,14 +758,15 @@ def map_builder(config):
                                  run_number = config.run_number,
                                  XYbins     = (number_of_bins  ,
                                                number_of_bins) ,
+                                 fit_type   = FitType.unbined  ,
                                  **config.map_params           )
 
     add_krevol(maps  = final_map,
                dst   = dst,
                masks_cuts = masks,
-               XYbins     = (number_of_bins  ,
-                             number_of_bins) ,
-               **config.map_params)
+               XYbins     = (number_of_bins,
+                             number_of_bins),
+               **config.krevol_params)
 
     check_drift_v_computation(final_map.t_evol.dv,
                               **config.map_params)

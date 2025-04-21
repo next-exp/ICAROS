@@ -44,10 +44,10 @@ def get_core(nbins,rmax, rfid):
     return mask
 
 def check_failed_fits(maps      : ASectorMap,
-                      maxFailed : float = 600,
-                      nbins     : int   = 100,
-                      rmax      : float = 200,
-                      rfid      : float = 200):
+                      maxFailed : float     ,
+                      nbins     : int       ,
+                      rmax      : float     ,
+                      rfid      : float     ):
     inner_core_mask    = get_core(nbins=nbins, rmax=rmax, rfid=rfid)
     map_values_in_core = maps.lt.values[inner_core_mask]
     numFailed = np.count_nonzero(np.isnan(map_values_in_core))
