@@ -372,7 +372,10 @@ def compute_drift_v(zdata    : np.array,
 
     if seed is None: seed = np.max(y), np.mean(zrange), 0.5, np.min(y)
 
-    z_cathode = DB.DetectorGeo(detector).ZMAX[0]
+    if detector == "new":
+        z_cathode = DB.DetectorGeo(detector).ZMAX[0]
+    elif detector == "next100":
+        z_cathode = 1187 # TEMPORARY
     try:
         f = fitf.fit(sigmoid, x, y, seed, sigma=poisson_sigma(y), fit_range=zrange)
         dv  = z_cathode/f.values[1]
