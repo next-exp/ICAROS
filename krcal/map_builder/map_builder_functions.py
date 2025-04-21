@@ -1,4 +1,5 @@
 from typing      import Tuple
+from typing      import Callable
 from dataclasses import dataclass
 from copy        import deepcopy
 
@@ -26,6 +27,7 @@ from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.kr_parevol_functions          import get_number_of_time_bins
 from .. core.io_functions                  import write_complete_maps
 from .. core.io_functions                  import compute_and_save_hist_as_pd
+from .. core.io_functions                  import compute_and_save_hist2d_as_pd
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
 from .. core.histo_functions               import ref_hist
@@ -648,6 +650,39 @@ def compute_map(dst          : pd.DataFrame,
     return no_peripheral
 
 
+def select_physical_events(dst              : pd.DataFrame,
+                           lower            : Callable,
+                           upper            : Callable,
+                           eff_interval     : Tuple[float, float],
+                           output           : pd.HDFStore,
+                           diff_histo_params: dict) -> (pd.DataFrame, np.ndarray):
+    n0   = dst.event.nunique()
+    mask = in_range(dst.Zrms**2, lower(dst.DT), upper(dst.DT))
+    dst  = dst[mask]
+    n1   = dst.event.nunique()
+    eff  = n1/n0
+    compute_and_save_hist2d_as_pd(values    = (dst.DT, dst.Zrms),
+                                  out_file  = output,
+                                  hist_name = "DTrms2_vs_DT",
+                                  **diff_histo_params)
+
+    message  = f"Selection efficiency of diffusion band ({eff}) out of range:"
+    message += f"({eff_interval[0]} - {eff_interval[1]})"
+    check_if_values_in_interval(np.array(eff), *eff_interval, message)
+
+    return dst[mask], mask
+
+
+def recompute_npeaks(dst):
+    events = dst.groupby("event")
+    ns1    = events.s1_peak.nunique().values
+    ns2    = events.s2_peak.nunique().values
+    n      = events.s1_peak.count  ().values
+    dst.loc[:, "nS1"] = np.repeat(ns1, n)
+    dst.loc[:, "nS2"] = np.repeat(ns2, n)
+    return dst
+
+
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
                nS1_eff_interval : Tuple[float, float],
@@ -694,6 +729,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                             band = mask3)
     return dst[mask3], masks
 
+
 def map_builder(config):
 
     print("Map builder starting...")
@@ -720,7 +756,20 @@ def map_builder(config):
                             n_dev      = config.n_dev_rate,
                             **config.rate_histo_params    )
 
-        dst_passed_cut, masks = apply_cuts(dst       = dst                    ,
+        dst_phys, mask = select_physical_events(dst,
+                                                config.diff_band_lower    ,
+                                                config.diff_band_upper    ,
+                                                (config.diff_band_eff_min,
+                                                 config.diff_band_eff_max),
+                                                store_hist                ,
+                                                config.diff_histo_params  )
+        dst_phys = recompute_npeaks(dst_phys)
+
+        nev_phys = dst_phys.event.nunique()
+        ratio    = nev_phys / nev_before * 100
+        print("    Number of physical events before cuts: {0} ({1:2.2f}%)".format(nev_phys, ratio))
+
+        dst_passed_cut, masks = apply_cuts(dst       = dst_phys               ,
                                     S1_signal        = type_of_signal.nS1     ,
                                     nS1_eff_interval = (config.nS1_eff_min    ,
                                                         config.nS1_eff_max)   ,
@@ -743,7 +792,7 @@ def map_builder(config):
                             **config.rate_histo_params      )
 
         nev_after = dst_passed_cut.event.nunique()
-        ratio     = nev_after/nev_before*100
+        ratio     = nev_after/nev_phys*100
         print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
 
 
@@ -762,7 +811,7 @@ def map_builder(config):
                                  **config.map_params           )
 
     add_krevol(maps  = final_map,
-               dst   = dst,
+               dst   = dst_phys,
                masks_cuts = masks,
                XYbins     = (number_of_bins,
                              number_of_bins),
