@@ -97,9 +97,9 @@ def get_time_series_df(time_bins    : Number,
     return shift_to_bin_centers(ip), masks
 
 
-def select_xy_sectors_df(dst        : DataFrame,
-                         bins_x     : np.array,
-                         bins_y     : np.array)-> Dict[int, List[DataFrame]]:
+def select_xy_sectors_df(dst    : DataFrame,
+                         bins_x : np.array,
+                         bins_y : np.array)-> Dict[int, List[DataFrame]]:
     """
     Return a DataFrameMap of selections organized by xy sector
     DataFrameMap = Dict[int, List[DataFrame]]
@@ -130,14 +130,14 @@ def select_xy_sectors_df(dst        : DataFrame,
     return dstMap
 
 
-def selection_in_band(z         : np.array,
-                      e         : np.array,
-                      range_z   : Range,
-                      range_e   : Range,
-                      nbins_z   : int     = 50,
-                      nbins_e   : int     = 100,
-                      nsigma    : float   = 3.5) ->Tuple[np.array, FitPar, FitPar,
-                                                         HistoPar2, ProfilePar]:
+def selection_in_band(z       : np.array,
+                      e       : np.array,
+                      range_z : Range,
+                      range_e : Range,
+                      nbins_z : int     = 50,
+                      nbins_e : int     = 100,
+                      nsigma  : float   = 3.5) ->Tuple[np.array, FitPar, FitPar,
+                                                       HistoPar2, ProfilePar]:
     """ This returns a selection of the events that are inside the Kr E vz Z
     returns: np.array(bool)
     """
@@ -171,4 +171,3 @@ def selection_in_band(z         : np.array,
     pp = ProfilePar(x = zc, xu = zerror, y = e_mean, yu = e_sigma)
 
     return sel_inband, fpl, fph, hp, pp
-
