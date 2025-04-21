@@ -50,3 +50,41 @@ def compute_and_save_hist_as_pd(values     : np.array           ,
     out_file.put(hist_name, table, format='table', data_columns=True)
 
     return
+
+def compute_and_save_hist2d_as_pd(values     : np.array           ,
+                                  out_file   : pd.HDFStore        ,
+                                  hist_name  : str                ,
+                                  n_bins     : int                ,
+                                  range_hist : Tuple[float, float],
+                                  norm       : bool = False       )->None:
+    """
+    Computes 1d-histogram and saves it in a file.
+    The name of the table inside the file must be provided.
+    Parameters
+    ----------
+    values : np.array
+        Array with values to be plotted.
+    out_file: pd.HDFStore
+        File where histogram will be saved.
+    hist_name: string
+        Name of the pd.Dataframe to contain the histogram.
+    n_bins: int
+        Number of bins to make the histogram.
+    range_hist: length-2 tuple (optional)
+        Range of the histogram.
+    norm: bool
+        If True, histogram will be normalized.
+    """
+    n, bx, by = np.histogram2d(*values, bins = n_bins,
+                               range = range_hist,
+                               density = norm)
+    bx = shift_to_bin_centers(np.unique(bx))
+    by = shift_to_bin_centers(np.unique(by))
+    bx, by = map(np.ravel, np.meshgrid(bx, by, indexing="ij"))
+    table = pd.DataFrame({'entries': n.flatten(),
+                          'magnitude_x': bx,
+                          'magnitude_y': by,
+                          })
+    out_file.put(hist_name, table, format='table', data_columns=True)
+
+    return
