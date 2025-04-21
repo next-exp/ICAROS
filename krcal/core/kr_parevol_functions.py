@@ -46,10 +46,10 @@ def computing_kr_parameters(data       : pd.DataFrame,
                             ts         : float,
                             emaps      : ASectorMap,
                             zslices_lt : int,
-                            zrange_lt  : Tuple[float,float]  = (0, 550),
-                            nbins_dv   : int                 = 35,
-                            zrange_dv  : Tuple[float, float] = (500, 625),
-                            detector   : str                 = 'new')->pd.DataFrame:
+                            zrange_lt  : Tuple[float,float],
+                            nbins_dv   : int,
+                            zrange_dv  : Tuple[float, float],
+                            detector   : str)->pd.DataFrame:
 
     """
     Computes some average parameters (e0, lt, drift v, energy
@@ -155,11 +155,11 @@ def kr_time_evolution(ts         : np.array,
                       yr_map     : Tuple[float, float],
                       nx_map     : int,
                       ny_map     : int,
-                      zslices_lt : int                 = 50,
-                      zrange_lt  : Tuple[float,float]  = (0, 550),
-                      nbins_dv   : int                 = 35,
-                      zrange_dv  : Tuple[float, float] = (500, 625),
-                      detector   : str                 = 'new')->pd.DataFrame:
+                      zslices_lt : int,
+                      zrange_lt  : Tuple[float,float],
+                      nbins_dv   : int,
+                      zrange_dv  : Tuple[float, float],
+                      detector   : str)->pd.DataFrame:
     """
     Computes some average parameters (e0, lt, drift v,
     S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
