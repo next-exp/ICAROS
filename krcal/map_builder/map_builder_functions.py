@@ -503,8 +503,12 @@ def add_krevol(maps         : ASectorMap,
                nStimeprofile: int,
                x_range      : Tuple[float, float],
                y_range      : Tuple[float, float],
-               XYbins       : Tuple[int, int]    ,
-               **kwargs                          ) -> None:
+               XYbins       : Tuple[int, int],
+               zslices_lt   : int,
+               zrange_lt    : Tuple[float, float],
+               nbins_dv     : int,
+               zrange_dv    : Tuple[float, float],
+               detector     : str):
     """
     Adds time evolution dataframe to the map
 
@@ -550,7 +554,13 @@ def add_krevol(maps         : ASectorMap,
                                        xr_map     = x_range,
                                        yr_map     = y_range,
                                        nx_map     = XYbins[0],
-                                       ny_map     = XYbins[1])
+                                       ny_map     = XYbins[1],
+                                       zslices_lt = zslices_lt,
+                                       zrange_lt  = zrange_lt,
+                                       nbins_dv   = nbins_dv,
+                                       zrange_dv  = zrange_dv,
+                                       detector   = detector,
+                                       )
 
     pars_ec        = cut_time_evolution(masks_time = masks_time,
                                         dst        = dst,
