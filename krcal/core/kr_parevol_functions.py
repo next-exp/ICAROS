@@ -109,12 +109,16 @@ def computing_kr_parameters(data       : pd.DataFrame,
     tot_corr_factor = apply_all_correction(maps = emaps,
                                            apply_temp=False)
     nbins = int((len(data.S2e))**0.5)
-    f, _  = quick_gauss_fit(data.S2e .values*tot_corr_factor(data.X   .values,
-                                                             data.Y   .values,
-                                                             data.Z   .values,
-                                                             data.time.values),
-                            bins=nbins)
-    R = resolution(f.values, f.errors, 41.5)
+    ecorr = data.S2e .values * tot_corr_factor(data.X   .values,
+                                               data.Y   .values,
+                                               data.Z   .values,
+                                               data.time.values)
+    try:
+        f = quick_gauss_fit(ecorr, bins=nbins)
+        R = resolution(f.values, f.errors, 41.5)
+    except:
+        R = resolution((np.nan,)*3, (np.nan,)*3, 41.5)
+
     resol, err_resol = R[0][0], R[0][1]
     ## average values
     parameters = ['S1w', 'S1h', 'S1e',
