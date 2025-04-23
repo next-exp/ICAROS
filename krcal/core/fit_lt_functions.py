@@ -96,9 +96,9 @@ def fit_lifetime(z       : np.array,
                    range2 = range_e)
 
     if fit == FitType.profile:
-        fp, fp2, fr = fit_lifetime_profile(z, e, nbins_z, range_z)
+        fp, fp2, fr    = fit_lifetime_profile(z, e, nbins_z, range_z)
     else:
-        fp, fp2, fr = fit_lifetime_unbined(z, e, nbins_z, range_z)
+        fp, fp2, fr, _ = fit_lifetime_unbined(z, e, nbins_z, range_z)
 
     return FitCollection2(fp = fp, fp2 = fp2, hp = hp, fr = fr)
     logging.debug(f' fp ={fp}, fp2 ={fp2} ')
@@ -194,7 +194,7 @@ def fit_lifetime_profile(z : np.array,
 def fit_lifetime_unbined(z       : np.array,
                          e       : np.array,
                          nbins_z : int,
-                         range_z : Tuple[float,float])->Tuple[FitPar, FitPar, FitResult]:
+                         range_z : Tuple[float,float])->Tuple[FitPar, FitPar, FitResult, bool]:
     """
     Based on
 
@@ -223,7 +223,7 @@ def fit_lifetime_unbined(z       : np.array,
             FitPar : Fit parameters (arrays of fitted values and errors, fit function)
             FitPar : Fit parameters
             FirResults: Fit results (lt, e0, errors, chi2)
-
+            valid: a boolean indicating whether the fit was successful
     """
 
     logging.debug(' fit_liftime_unbined')
@@ -287,7 +287,7 @@ def fit_lifetime_unbined(z       : np.array,
                    chi2 = c2,
                    valid = valid)
 
-    return fp, fp2, fr
+    return fp, fp2, fr, valid
 
 
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
