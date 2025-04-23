@@ -154,12 +154,15 @@ def selection_in_band(z       : np.array,
     # 1. Profile of mean values of e in bins of z
     #zc, e_mean, e_sigma = fitf.profileX(z, e, nbins_z, range_z, range_e)
     #2. Fit two exponentials to e_mmean +- ns_igma * e_sigma defining a band
-    y         = e_mean +  nsigma * e_sigma
-    fph, _, _    = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
-    y         = e_mean - nsigma * e_sigma
-    fpl, _, _ = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
+    y = e_mean +  nsigma * e_sigma
+    fph, _, _, validh  = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
+
+    y = e_mean - nsigma * e_sigma
+    fpl, _, _, validl  = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
     # 3. Select events in the range defined by the band
-    sel_inband = in_range(e, fpl.f(z), fph.f(z))
+    sel_inband = in_range( e
+                         , fpl.f(z) if validh else 0.
+                         , fph.f(z) if validh else np.inf)
 
     hp = HistoPar2(var = z,
                    nbins = nbins_z,
