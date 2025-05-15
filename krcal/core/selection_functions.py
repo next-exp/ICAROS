@@ -148,7 +148,7 @@ def selection_in_band(z       : np.array,
     zc = shift_to_bin_centers(zbins)
 
     sel_e = in_range(e, *range_e)
-    mean, sigma, chi2, ok = fit_slices_1d_gauss(z[sel_e], e[sel_e], zbins, ebins, min_entries=5e2)
+    mean, sigma, chi2, ok = fit_slices_1d_gauss(z[sel_e], e[sel_e], zbins, ebins, min_entries=1e2)
     e_mean  = mean.value
     e_sigma = sigma.value
     # 1. Profile of mean values of e in bins of z
