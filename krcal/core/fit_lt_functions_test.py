@@ -175,8 +175,8 @@ def test_fit_lt_unbined_uses_correct_zrange():
     z_range = (0, max_z)
     nbins_z = 50
 
-    _, _, pars     = fit_lifetime_unbined(z    , es    , nbins_z, z_range);
-    _, _, pars_new = fit_lifetime_unbined(z_new, es_new, nbins_z, z_range);
+    _, _, pars     , _ = fit_lifetime_unbined(z    , es    , nbins_z, z_range);
+    _, _, pars_new , _ = fit_lifetime_unbined(z_new, es_new, nbins_z, z_range);
     lt , e0  = pars.par
     ltu, e0u = pars.err
     lt_new , e0_new  = pars_new.par

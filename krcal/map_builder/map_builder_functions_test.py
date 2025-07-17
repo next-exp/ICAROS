@@ -48,18 +48,21 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
     default_n_bins = 15
     run_number     = 7517
-    config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_params_new = copy.copy(config.as_namespace.map_params)
-    map_params_new['nmin']          = 100
-    map_params_new['nStimeprofile'] = 1200
-    map_params_new['z_range']       = (0, 10000)
-    config.update(dict(folder         = folder_test_dst,
-                       file_in        = test_dst_file  ,
-                       file_out_map   = map_file_out   ,
-                       file_out_hists = histo_file_out ,
-                       default_n_bins = default_n_bins ,
-                       run_number     = run_number     ,
-                       map_params     = map_params_new ))
+    config = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
+    map_params_new    = copy.copy(config.as_namespace.   map_params)
+    krevol_params_new = copy.copy(config.as_namespace.krevol_params)
+    map_params_new   ['nmin']          = 100
+    map_params_new   ['z_range']       = (0, 10000)
+    krevol_params_new['nStimeprofile'] = 1200
+    config.update(dict(folder         = folder_test_dst  ,
+                       file_in        = test_dst_file    ,
+                       file_out_map   = map_file_out     ,
+                       file_out_hists = histo_file_out   ,
+                       default_n_bins = default_n_bins   ,
+                       run_number     = run_number       ,
+                       map_params     = map_params_new   ,
+                       krevol_params  = krevol_params_new))
+
     map_builder(config.as_namespace)
     maps = read_maps(map_file_out)
     assert type(maps)==ASectorMap
@@ -302,7 +305,6 @@ def test_exception_drift_v(folder_test_dst, test_dst_file, output_maps_tmdir):
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_driftv.h5')
     map_params_new = copy.copy(conf.as_namespace.map_params)
     map_params_new['dv_maxFailed'] = 0.01
-    map_params_new['nStimeprofile'] = 100
     run_number = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
