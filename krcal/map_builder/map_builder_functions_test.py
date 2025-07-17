@@ -165,7 +165,7 @@ def test_correct_map_with_unsorted_dst(folder_test_dst  ,
 
     default_n_bins = 15
     run_number     = 7517
-    config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    config = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_params_new = config.as_namespace.map_params
     map_params_new['nmin']    = 100
     map_params_new['z_range'] = (0, 10000)
@@ -189,7 +189,7 @@ def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when ns1=1 efficiency is out of range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s1.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s1.h5')
     min_eff_test = 0.
@@ -211,7 +211,7 @@ def test_exception_s2(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when nS2=1 efficiency is out of range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s2.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s2.h5')
     min_eff_test = 0.
@@ -233,7 +233,7 @@ def test_exception_rate(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when rate distribution is not flat enough.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_rate.h5')
     n_dev_rate = 0.5
@@ -254,7 +254,7 @@ def test_exception_Zdst(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when Z distribution is not
     similar enough to the reference one.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_Z.h5')
     nsigmas_Zdst = 0.5
@@ -275,7 +275,7 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when band selection efficiency is
     out of a given range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_bandsel.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_bandsel.h5')
     band_sel_params_new = copy.copy(conf.as_namespace.band_sel_params)
@@ -297,7 +297,7 @@ def test_exception_drift_v(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks that exception raises if drift_v fit
     fails in too many temporal bins.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_driftv.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_driftv.h5')
     map_params_new = copy.copy(conf.as_namespace.map_params)
