@@ -577,9 +577,7 @@ def add_krevol(maps         : ASectorMap,
 
     return
 
-def check_drift_v_computation(drift_v      : np.ndarray ,
-                              dv_maxFailed : float = 0.5,
-                              **kwargs                  ) -> None:
+def check_drift_v_computation(drift_v: np.ndarray, dv_maxFailed: float):
     """
     Checks if drift velocity computation has failed in too many temporal
     bins. If that is the case, map computation will abort.
@@ -622,7 +620,8 @@ def compute_map(dst          : pd.DataFrame,
                 maxFailed    : int,
                 r_max        : float,
                 x_range      : Tuple[float, float],
-                y_range      : Tuple[float, float]) -> ASectorMap:
+                y_range      : Tuple[float, float],
+                dv_maxFailed : float) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -831,8 +830,7 @@ def map_builder(config):
                              number_of_bins),
                **config.krevol_params)
 
-    check_drift_v_computation(final_map.t_evol.dv,
-                              **config.map_params)
+    check_drift_v_computation(final_map.t_evol.dv, config.map_params["dv_maxFailed"])
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
