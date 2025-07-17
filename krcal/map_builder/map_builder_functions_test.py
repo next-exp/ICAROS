@@ -31,9 +31,6 @@ logging.disable(logging.DEBUG)
 this_script_logger = logging.getLogger(__name__)
 this_script_logger.setLevel(logging.INFO)
 
-@fixture(scope="module")
-def t_evol_table(MAPSDIR):
-    return os.path.join(MAPSDIR, 'time_evol_table.h5')
 
 @mark.timeout(None)
 @mark.dependency()
@@ -72,6 +69,8 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-1)
     assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5)
     assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-1)
+    assert_dataframes_close(maps.t_evol, old_maps.t_evol, rtol=1e-4)
+
 
 @mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
 def test_time_evol_table_correct_elements(output_maps_tmdir):
@@ -105,13 +104,6 @@ def test_time_evol_eff_less_one(output_maps_tmdir):
     assert np.all(emaps.t_evol.S1eff   <= 1.)
     assert np.all(emaps.t_evol.S2eff   <= 1.)
     assert np.all(emaps.t_evol.Bandeff <= 1.)
-
-@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
-def test_time_evol_table_exact_numbers(t_evol_table, output_maps_tmdir):
-    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
-    emaps        = read_maps(map_file_out)
-    t_evol = pd.pandas.read_hdf(t_evol_table, 't_evol')
-    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-4)
 
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):
