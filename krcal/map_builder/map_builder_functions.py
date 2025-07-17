@@ -766,13 +766,17 @@ def map_builder(config):
                             n_dev      = config.n_dev_rate,
                             **config.rate_histo_params    )
 
-        dst_phys, mask = select_physical_events(dst,
-                                                config.diff_band_lower    ,
-                                                config.diff_band_upper    ,
-                                                (config.diff_band_eff_min,
-                                                 config.diff_band_eff_max),
-                                                store_hist                ,
-                                                config.diff_histo_params  )
+        if config.select_diffusion_band:
+            dst_phys, mask = select_physical_events(dst,
+                                                    config.diff_band_lower    ,
+                                                    config.diff_band_upper    ,
+                                                    (config.diff_band_eff_min,
+                                                     config.diff_band_eff_max),
+                                                    store_hist                ,
+                                                    config.diff_histo_params  )
+        else:
+            dst_phys = dst
+
         dst_phys = recompute_npeaks(dst_phys)
 
         nev_phys = dst_phys.event.nunique()
