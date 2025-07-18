@@ -496,19 +496,18 @@ def remove_peripheral(map       : ASectorMap,
 
     return new_map
 
-def add_krevol(maps         : ASectorMap,
-               dst          : pd.DataFrame,
-               masks_cuts   : masks_container,
-               r_fid        : float,
-               nStimeprofile: int,
-               x_range      : Tuple[float, float],
-               y_range      : Tuple[float, float],
-               XYbins       : Tuple[int, int],
-               zslices_lt   : int,
-               zrange_lt    : Tuple[float, float],
-               nbins_dv     : int,
-               zrange_dv    : Tuple[float, float],
-               detector     : str):
+def add_krevol(maps          : ASectorMap,
+               dst           : pd.DataFrame,
+               masks_cuts    : masks_container,
+               r_fid         : float,
+               nStimeprofile : int,
+               bootstrap_map : ASectorMap,
+               norm_strategy : NormStrategy,
+               zslices_lt    : int,
+               zrange_lt     : Tuple[float, float],
+               nbins_dv      : int,
+               zrange_dv     : Tuple[float, float],
+               detector      : str):
     """
     Adds time evolution dataframe to the map
 
@@ -547,19 +546,17 @@ def add_krevol(maps         : ASectorMap,
                                         dst        = dst)
 
     masks_timef    = [mask[fmask] for mask in masks_time]
-    pars           = kr_time_evolution(ts         = ts,
-                                       masks_time = masks_timef,
-                                       dst        = dstf,
-                                       emaps      = maps,
-                                       xr_map     = x_range,
-                                       yr_map     = y_range,
-                                       nx_map     = XYbins[0],
-                                       ny_map     = XYbins[1],
-                                       zslices_lt = zslices_lt,
-                                       zrange_lt  = zrange_lt,
-                                       nbins_dv   = nbins_dv,
-                                       zrange_dv  = zrange_dv,
-                                       detector   = detector,
+    pars           = kr_time_evolution(ts            = ts,
+                                       masks_time    = masks_timef,
+                                       dst           = dstf,
+                                       emaps         = maps,
+                                       bootstrap_map = bootstrap_map,
+                                       norm_strategy = norm_strategy,
+                                       zslices_lt    = zslices_lt,
+                                       zrange_lt     = zrange_lt,
+                                       nbins_dv      = nbins_dv,
+                                       zrange_dv     = zrange_dv,
+                                       detector      = detector,
                                        )
 
     pars_ec        = cut_time_evolution(masks_time = masks_time,
