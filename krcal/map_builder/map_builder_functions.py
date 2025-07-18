@@ -507,7 +507,8 @@ def add_krevol(maps          : ASectorMap,
                zrange_lt     : Tuple[float, float],
                nbins_dv      : int,
                zrange_dv     : Tuple[float, float],
-               detector      : str):
+               detector      : str,
+               **norm_options):
     """
     Adds time evolution dataframe to the map
 
@@ -557,7 +558,7 @@ def add_krevol(maps          : ASectorMap,
                                        nbins_dv      = nbins_dv,
                                        zrange_dv     = zrange_dv,
                                        detector      = detector,
-                                       )
+                                       **norm_options)
 
     pars_ec        = cut_time_evolution(masks_time = masks_time,
                                         dst        = dst,
@@ -820,11 +821,9 @@ def map_builder(config):
                                  fit_type   = FitType.unbined  ,
                                  **config.map_params           )
 
-    add_krevol(maps  = final_map,
-               dst   = dst_phys,
+    add_krevol(maps       = final_map,
+               dst        = dst_phys,
                masks_cuts = masks,
-               XYbins     = (number_of_bins,
-                             number_of_bins),
                **config.krevol_params)
 
     check_drift_v_computation(final_map.t_evol.dv, config.map_params["dv_maxFailed"])
