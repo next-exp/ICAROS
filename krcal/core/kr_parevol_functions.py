@@ -42,14 +42,16 @@ def get_number_of_time_bins(nStimeprofile: int,
 
     return ntimebins
 
-def computing_kr_parameters(data       : pd.DataFrame,
-                            ts         : float,
-                            emaps      : ASectorMap,
-                            zslices_lt : int,
-                            zrange_lt  : Tuple[float,float],
-                            nbins_dv   : int,
-                            zrange_dv  : Tuple[float, float],
-                            detector   : str)->pd.DataFrame:
+def computing_kr_parameters(data          : pd.DataFrame,
+                            ts            : float,
+                            emaps         : ASectorMap,
+                            bootstrap_map : ASectorMap,
+                            norm_strategy : NormStrategy,
+                            zslices_lt    : int,
+                            zrange_lt     : Tuple[float,float],
+                            nbins_dv      : int,
+                            zrange_dv     : Tuple[float, float],
+                            detector      : str)->pd.DataFrame:
 
     """
     Computes some average parameters (e0, lt, drift v, energy
@@ -63,11 +65,11 @@ def computing_kr_parameters(data       : pd.DataFrame,
     ts: float
         Central time of the distribution.
     emaps: correction map
-        Allows geometrical correction of the energy.
-    xr_map, yr_map: length-2 tuple
-        Set the X/Y-coordinate range of the correction map.
-    nx_map, ny_map: int
-        Set the number of X/Y-coordinate bins for the correction map.
+        Map for self-correcting data in parameter estimation of resolution.
+    bootstrap_map : correction map
+        Reference map for setting the energy scale and monitor its evolution.
+    norm_strategy: NormStrategy
+        Chosen approach for normalization purposes.
     zslices_lt: int
         Number of Z-coordinate bins for doing the exponential fit to compute
         the lifetime.
@@ -83,6 +85,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
     detector: string (optional)
         Used to get the cathode position from DB for the drift velocity
         computation.
+
     Returns
     -------
     pars: DataFrame
@@ -90,13 +93,12 @@ def computing_kr_parameters(data       : pd.DataFrame,
     """
 
     ## lt and e0
-    geo_correction_factor = e0_xy_correction(map           =  emaps,
-                                             norm_strategy = NormStrategy.max)
+    geo_correction_factor = e0_xy_correction(map           = bootstrap_map,
+                                             norm_strategy = norm_strategy)
 
     _, _, fr = fit_lifetime_profile(data.Z,
-                                    data.S2e.values*geo_correction_factor(
-                                        data.X.values,
-                                        data.Y.values),
+                                    data.S2e.values*geo_correction_factor(data.X.values,
+                                                                          data.Y.values),
                                     zslices_lt, zrange_lt)
     e0,  lt  = fr.par
     e0u, ltu = fr.err
@@ -126,7 +128,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
                   'Nsipm', 'Xrms', 'Yrms']
     mean_d, var_d = {}, {}
     for parameter in parameters:
-        data_value           = getattr(data, parameter)
+        data_value        = getattr(data, parameter)
         mean_d[parameter] = np.mean(data_value)
         var_d [parameter] = (np.var(data_value)/len(data_value))**0.5
 
