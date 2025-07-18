@@ -152,19 +152,17 @@ def computing_kr_parameters(data          : pd.DataFrame,
     return pars
 
 
-def kr_time_evolution(ts         : np.array,
-                      masks_time : List[np.array],
-                      dst        : pd.DataFrame,
-                      emaps      : ASectorMap,
-                      xr_map     : Tuple[float, float],
-                      yr_map     : Tuple[float, float],
-                      nx_map     : int,
-                      ny_map     : int,
-                      zslices_lt : int,
-                      zrange_lt  : Tuple[float,float],
-                      nbins_dv   : int,
-                      zrange_dv  : Tuple[float, float],
-                      detector   : str)->pd.DataFrame:
+def kr_time_evolution(ts            : np.array,
+                      masks_time    : List[np.array],
+                      dst           : pd.DataFrame,
+                      emaps         : ASectorMap,
+                      bootstrap_map : ASectorMap,
+                      norm_strategy : NormStrategy,
+                      zslices_lt    : int,
+                      zrange_lt     : Tuple[float,float],
+                      nbins_dv      : int,
+                      zrange_dv     : Tuple[float, float],
+                      detector      : str)->pd.DataFrame:
     """
     Computes some average parameters (e0, lt, drift v,
     S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
@@ -212,7 +210,8 @@ def kr_time_evolution(ts         : np.array,
     for index in range(len(masks_time)):
         sel_dst = dst[masks_time[index]]
         pars    = computing_kr_parameters(sel_dst, ts[index],
-                                          emaps,
+                                          emaps, bootstrap_map,
+                                          norm_strategy,
                                           zslices_lt, zrange_lt,
                                           nbins_dv, zrange_dv,
                                           detector)
