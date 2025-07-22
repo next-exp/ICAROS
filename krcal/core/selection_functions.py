@@ -161,7 +161,7 @@ def selection_in_band(z       : np.array,
     fpl, _, _, validl  = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
     # 3. Select events in the range defined by the band
     sel_inband = in_range( e
-                         , fpl.f(z) if validh else 0.
+                         , fpl.f(z) if validl else 0.
                          , fph.f(z) if validh else np.inf)
 
     hp = HistoPar2(var = z,
