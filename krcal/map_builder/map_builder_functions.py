@@ -665,7 +665,7 @@ def select_physical_events(dst              : pd.DataFrame,
                            diff_histo_params: dict) -> (pd.DataFrame, np.ndarray):
     n0   = dst.event.nunique()
     mask = in_range(dst.Zrms**2, lower(dst.DT), upper(dst.DT))
-    dst  = dst[mask]
+    dst  = dst[mask].copy()
     n1   = dst.event.nunique()
     eff  = n1/n0
     compute_and_save_hist2d_as_pd(values    = (dst.DT, dst.Zrms),
@@ -677,7 +677,7 @@ def select_physical_events(dst              : pd.DataFrame,
     message += f"({eff_interval[0]} - {eff_interval[1]})"
     check_if_values_in_interval(np.array(eff), *eff_interval, message)
 
-    return dst[mask], mask
+    return dst, mask
 
 
 def recompute_npeaks(dst):
