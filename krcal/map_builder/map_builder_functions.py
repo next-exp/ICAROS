@@ -684,6 +684,7 @@ def recompute_npeaks(dst):
     ns1    = events.s1_peak.nunique().values
     ns2    = events.s2_peak.nunique().values
     n      = events.s1_peak.count  ().values
+    dst = dst.copy()
     dst.loc[:, "nS1"] = np.repeat(ns1, n)
     dst.loc[:, "nS2"] = np.repeat(ns2, n)
     return dst
