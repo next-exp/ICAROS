@@ -110,15 +110,15 @@ def computing_kr_parameters(data           : pd.DataFrame,
                                zrange=zrange_dv, detector=detector)
 
   ## energy resolution and error
-    tot_corr_factor = apply_all_correction(maps = emaps,
-                                           apply_temp=False)
+    tot_corr_factor = apply_all_correction(maps          = emaps,
+                                           apply_temp    = False)
     nbins = int((len(data.S2e))**0.5)
     ecorr = data.S2e .values * tot_corr_factor(data.X   .values,
                                                data.Y   .values,
                                                data.Z   .values,
                                                data.time.values)
     try:
-        f, _ = quick_gauss_fit(ecorr, bins=nbins)
+        f, _ = quick_gauss_fit(ecorr, bins=70)
         R    = resolution(f.values, f.errors, 41.5)
     except:
         R    = resolution((np.nan,)*3, (np.nan,)*3, 41.5)
