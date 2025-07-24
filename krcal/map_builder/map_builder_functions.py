@@ -287,8 +287,7 @@ def band_selector_and_check(dst        : pd.DataFrame             ,
                             nsigma_sel : float                    ,
                             eff_min    : float                    ,
                             eff_max    : float                    ,
-                            norm_strat : NormStrategy = NormStrategy.max,
-                            input_mask : np.array     = None,
+                            input_mask : np.array     = None
                            )->np.array:
     """
     This function returns a selection of the events that
@@ -329,7 +328,7 @@ def band_selector_and_check(dst        : pd.DataFrame             ,
         input_mask = [True] * len(dst)
     else: pass;
 
-    emaps = e0_xy_correction(boot_map, norm_strategy = norm_strat)
+    emaps = e0_xy_correction(boot_map, NormStrategy.max)
     E0    = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values,
                                                dst[input_mask].Y.values)
 
