@@ -794,7 +794,8 @@ def map_builder(config):
                                     nsigmas_Zdst     = config.nsigmas_Zdst    ,
                                     ref_Z_histo      = ref_histos.Z_dist_hist ,
                                     bootstrapmap     = bootstrapmap           ,
-                                    band_sel_params  = config.band_sel_params )
+                                    band_sel_params  = config.band_sel_params
+                                    )
 
         check_rate_and_hist(times      = dst_passed_cut.time,
                             output_f   = store_hist         ,
@@ -821,9 +822,10 @@ def map_builder(config):
                                  fit_type   = FitType.unbined  ,
                                  **config.map_params           )
 
-    add_krevol(maps       = final_map,
-               dst        = dst_phys,
-               masks_cuts = masks,
+    add_krevol(maps          = final_map,
+               dst           = dst_phys,
+               masks_cuts    = masks,
+               bootstrap_map = bootstrapmap,
                **config.krevol_params)
 
     check_drift_v_computation(final_map.t_evol.dv, config.map_params["dv_maxFailed"])
