@@ -14,11 +14,11 @@ jobs:
       matrix:
         python-version: [3.8]
         #platform: [ubuntu-18.04, macos-latest]
-        platform: [ubuntu-20.04]
+        platform: [ubuntu-24.04]
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Get LFS files
       run: git lfs pull
     # - name: Fix Conda permissions on macOS
@@ -28,8 +28,8 @@ jobs:
       run: |
         cd ..
         git clone https://github.com/next-exp/IC.git
- 
-    
+
+
     - name: Run tests
       run: |
         cd ..

@@ -274,7 +274,7 @@ def fit_lifetime_unbined(z       : np.array,
         logging.warn(f'Type error found in fit_lifetime_unbined: not enough events for fit')
         valid = False
 
-    except LinAlgError:
+    except SystemError:
         logging.warn(f'LinAlgError error found in fit_lifetime_unbined: not enough events for fit')
         valid = False
 
