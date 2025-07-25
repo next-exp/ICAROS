@@ -1,5 +1,5 @@
 """Module fit_functions.
-This module includes general fit functions 
+This module includes general fit functions
 
 Notes
 -----
@@ -335,10 +335,11 @@ def sigmoid(x          : np.array,
 
 
 def compute_drift_v(zdata    : np.array,
-                    nbins    : int                               = 35,
-                    zrange   : Tuple[float, float]               = (500, 640),
+                    nbins    : int,
+                    zrange   : Tuple[float, float],
+                    detector : str,
                     seed     : Tuple[float, float, float, float] = None,
-                    detector : str                               = 'new')->Tuple[float, float]:
+                    )->Tuple[float, float]:
     """
     Computes the drift velocity for a given distribution
     using the sigmoid function to get the cathode edge.
@@ -371,7 +372,10 @@ def compute_drift_v(zdata    : np.array,
 
     if seed is None: seed = np.max(y), np.mean(zrange), 0.5, np.min(y)
 
-    z_cathode = DB.DetectorGeo(detector).ZMAX[0]
+    if detector == "new":
+        z_cathode = DB.DetectorGeo(detector).ZMAX[0]
+    elif detector == "next100":
+        z_cathode = 1187 # TEMPORARY
     try:
         f = fitf.fit(sigmoid, x, y, seed, sigma=poisson_sigma(y), fit_range=zrange)
         dv  = z_cathode/f.values[1]

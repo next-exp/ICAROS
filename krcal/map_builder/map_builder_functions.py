@@ -1,4 +1,5 @@
 from typing      import Tuple
+from typing      import Callable
 from dataclasses import dataclass
 from copy        import deepcopy
 
@@ -26,6 +27,7 @@ from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.kr_parevol_functions          import get_number_of_time_bins
 from .. core.io_functions                  import write_complete_maps
 from .. core.io_functions                  import compute_and_save_hist_as_pd
+from .. core.io_functions                  import compute_and_save_hist2d_as_pd
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
 from .. core.histo_functions               import ref_hist
@@ -117,14 +119,14 @@ def load_data(input_path         : str ,
 
     return dst_filtered, bootstrap_map, ref_histos
 
-def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
-                                   column     : type_of_signal              ,
-                                   interval   : Tuple[float, float]         ,
-                                   output_f   : pd.HDFStore                 ,
-                                   input_mask : np.array            = None  ,
-                                   nbins_hist : int                 = 10    ,
-                                   range_hist : Tuple[float, float] = (0,10),
-                                   norm       : bool = True)->np.array:
+def selection_nS_mask_and_checking(dst        : pd.DataFrame       ,
+                                   column     : type_of_signal     ,
+                                   interval   : Tuple[float, float],
+                                   output_f   : pd.HDFStore        ,
+                                   nbins_hist : int                ,
+                                   range_hist : Tuple[float, float],
+                                   input_mask : np.array = None    ,
+                                   norm       : bool     = True    )->np.array:
     """
     Selects nS1(or nS2) == 1 for a given kr dst and
     returns the mask. It also computes selection efficiency,
@@ -156,7 +158,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     """
     if input_mask is None:
         input_mask = [True] * len(dst)
-    else: pass;
+
     mask             = np.zeros_like(input_mask)
     mask[input_mask] = getattr(dst[input_mask], column.value) == 1
     nevts_after      = dst[mask]      .event.nunique()
@@ -249,6 +251,7 @@ def check_rate_and_hist(times      : np.array           ,
     """
     min_time   = times.min()
     max_time   = times.max()
+
     ntimebins  = get_number_of_time_bins(bin_size,
                                          min_time,
                                          max_time)
@@ -275,17 +278,16 @@ def check_rate_and_hist(times      : np.array           ,
                                 raising_message = message          )
     return;
 
-def band_selector_and_check(dst       : pd.DataFrame,
-                           boot_map   : ASectorMap,
-                           norm_strat : NormStrategy              = NormStrategy.max,
-                           input_mask : np.array                  = None,
-                           range_Z    : Tuple[np.array, np.array] = (10, 550),
-                           range_E    : Tuple[np.array, np.array] = (10.0e+3,14e+3),
-                           nbins_z    : int                       = 50,
-                           nbins_e    : int                       = 50,
-                           nsigma_sel : float                     = 3.5,
-                           eff_min   : float                      = 0.4,
-                           eff_max   : float                      = 0.6
+def band_selector_and_check(dst        : pd.DataFrame             ,
+                            boot_map   : ASectorMap               ,
+                            range_Z    : Tuple[np.array, np.array],
+                            range_E    : Tuple[np.array, np.array],
+                            nbins_z    : int                      ,
+                            nbins_e    : int                      ,
+                            nsigma_sel : float                    ,
+                            eff_min    : float                    ,
+                            eff_max    : float                    ,
+                            input_mask : np.array     = None
                            )->np.array:
     """
     This function returns a selection of the events that
@@ -326,7 +328,7 @@ def band_selector_and_check(dst       : pd.DataFrame,
         input_mask = [True] * len(dst)
     else: pass;
 
-    emaps = e0_xy_correction(boot_map, norm_strategy = norm_strat)
+    emaps = e0_xy_correction(boot_map, NormStrategy.max)
     E0    = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values,
                                                dst[input_mask].Y.values)
 
@@ -382,10 +384,10 @@ def calculate_map(dst     : pd.DataFrame,
                   e_range : Tuple[float, float],
                   chi2_range: Tuple[float, float],
                   lt_range: Tuple[float, float],
-                  fit_type: FitType = FitType.unbined,
-                  nmin    : int     = 100,
-                  x_range : Tuple[float, float] = (-200,200),
-                  y_range : Tuple[float, float] = (-200,200)
+                  fit_type: FitType,
+                  nmin    : int,
+                  x_range : Tuple[float, float],
+                  y_range : Tuple[float, float],
                   ):
     """
     Calculates and outputs correction map
@@ -479,9 +481,10 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     return amap
 
 def remove_peripheral(map       : ASectorMap,
-                      nbins     : int   = 100,
-                      rmax      : float = 200,
-                      rfid      : float = 200) -> ASectorMap:
+                      nbins     : int       ,
+                      rmax      : float     ,
+                      rfid      : float     ,
+                      ) -> ASectorMap:
 
     new_map     = deepcopy(map)
     mask_core   = get_core(nbins,rmax, rfid)
@@ -492,15 +495,19 @@ def remove_peripheral(map       : ASectorMap,
 
     return new_map
 
-def add_krevol(maps         : ASectorMap,
-               dst          : pd.DataFrame,
-               masks_cuts   : masks_container,
-               r_fid        : float,
-               nStimeprofile: int,
-               x_range      : Tuple[float, float],
-               y_range      : Tuple[float, float],
-               XYbins       : Tuple[int, int],
-               **kwargs                          ) -> None:
+def add_krevol(maps          : ASectorMap,
+               dst           : pd.DataFrame,
+               masks_cuts    : masks_container,
+               r_fid         : float,
+               nStimeprofile : int,
+               bootstrap_map : ASectorMap,
+               norm_strategy : NormStrategy,
+               zslices_lt    : int,
+               zrange_lt     : Tuple[float, float],
+               nbins_dv      : int,
+               zrange_dv     : Tuple[float, float],
+               detector      : str,
+               **norm_options):
     """
     Adds time evolution dataframe to the map
 
@@ -539,14 +546,18 @@ def add_krevol(maps         : ASectorMap,
                                         dst        = dst)
 
     masks_timef    = [mask[fmask] for mask in masks_time]
-    pars           = kr_time_evolution(ts         = ts,
-                                       masks_time = masks_timef,
-                                       dst        = dstf,
-                                       emaps      = maps,
-                                       xr_map     = x_range,
-                                       yr_map     = y_range,
-                                       nx_map     = XYbins[0],
-                                       ny_map     = XYbins[1])
+    pars           = kr_time_evolution(ts            = ts,
+                                       masks_time    = masks_timef,
+                                       dst           = dstf,
+                                       emaps         = maps,
+                                       bootstrap_map = bootstrap_map,
+                                       norm_strategy = norm_strategy,
+                                       zslices_lt    = zslices_lt,
+                                       zrange_lt     = zrange_lt,
+                                       nbins_dv      = nbins_dv,
+                                       zrange_dv     = zrange_dv,
+                                       detector      = detector,
+                                       **norm_options)
 
     pars_ec        = cut_time_evolution(masks_time = masks_time,
                                         dst        = dst,
@@ -563,9 +574,7 @@ def add_krevol(maps         : ASectorMap,
 
     return
 
-def check_drift_v_computation(drift_v      : np.ndarray ,
-                              dv_maxFailed : float = 0.5,
-                              **kwargs                  ) -> None:
+def check_drift_v_computation(drift_v: np.ndarray, dv_maxFailed: float):
     """
     Checks if drift velocity computation has failed in too many temporal
     bins. If that is the case, map computation will abort.
@@ -603,13 +612,13 @@ def compute_map(dst          : pd.DataFrame,
                 e_range      : Tuple[float, float],
                 chi2_range   : Tuple[float, float],
                 lt_range     : Tuple[float, float],
-                fit_type     : FitType = FitType.unbined,
-                nmin         : int     = 100,
-                maxFailed    : int = 600,
-                r_max        : float = 200,
-                x_range      : Tuple[float, float] = (-200,200),
-                y_range      : Tuple[float, float] = (-200,200),
-                **kwargs                                       ) -> ASectorMap:
+                fit_type     : FitType,
+                nmin         : int,
+                maxFailed    : int,
+                r_max        : float,
+                x_range      : Tuple[float, float],
+                y_range      : Tuple[float, float],
+                dv_maxFailed : float) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -646,6 +655,41 @@ def compute_map(dst          : pd.DataFrame,
 
     return no_peripheral
 
+
+def select_physical_events(dst              : pd.DataFrame,
+                           lower            : Callable,
+                           upper            : Callable,
+                           eff_interval     : Tuple[float, float],
+                           output           : pd.HDFStore,
+                           diff_histo_params: dict) -> (pd.DataFrame, np.ndarray):
+    n0   = dst.event.nunique()
+    mask = in_range(dst.Zrms**2, lower(dst.DT), upper(dst.DT))
+    dst  = dst[mask].copy()
+    n1   = dst.event.nunique()
+    eff  = n1/n0
+    compute_and_save_hist2d_as_pd(values    = (dst.DT, dst.Zrms),
+                                  out_file  = output,
+                                  hist_name = "DTrms2_vs_DT",
+                                  **diff_histo_params)
+
+    message  = f"Selection efficiency of diffusion band ({eff}) out of range:"
+    message += f"({eff_interval[0]} - {eff_interval[1]})"
+    check_if_values_in_interval(np.array(eff), *eff_interval, message)
+
+    return dst, mask
+
+
+def recompute_npeaks(dst):
+    events = dst.groupby("event")
+    ns1    = events.s1_peak.nunique().values
+    ns2    = events.s2_peak.nunique().values
+    n      = events.s1_peak.count  ().values
+    dst = dst.copy()
+    dst.loc[:, "nS1"] = np.repeat(ns1, n)
+    dst.loc[:, "nS2"] = np.repeat(ns2, n)
+    return dst
+
+
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
                nS1_eff_interval : Tuple[float, float],
@@ -659,7 +703,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                nsigmas_Zdst     : float              ,
                bootstrapmap     : ASectorMap         ,
                band_sel_params  : dict               ,
-               ) -> pd.DataFrame:
+               ) -> (pd.DataFrame, masks_container):
     n0    = dst.event.nunique()
     mask1 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S1_signal         ,
@@ -692,6 +736,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                             band = mask3)
     return dst[mask3], masks
 
+
 def map_builder(config):
 
     print("Map builder starting...")
@@ -718,7 +763,24 @@ def map_builder(config):
                             n_dev      = config.n_dev_rate,
                             **config.rate_histo_params    )
 
-        dst_passed_cut, masks = apply_cuts(dst       = dst                    ,
+        if config.select_diffusion_band:
+            dst_phys, mask = select_physical_events(dst,
+                                                    config.diff_band_lower    ,
+                                                    config.diff_band_upper    ,
+                                                    (config.diff_band_eff_min,
+                                                     config.diff_band_eff_max),
+                                                    store_hist                ,
+                                                    config.diff_histo_params  )
+        else:
+            dst_phys = dst
+
+        dst_phys = recompute_npeaks(dst_phys)
+
+        nev_phys = dst_phys.event.nunique()
+        ratio    = nev_phys / nev_before * 100
+        print("    Number of physical events before cuts: {0} ({1:2.2f}%)".format(nev_phys, ratio))
+
+        dst_passed_cut, masks = apply_cuts(dst       = dst_phys               ,
                                     S1_signal        = type_of_signal.nS1     ,
                                     nS1_eff_interval = (config.nS1_eff_min    ,
                                                         config.nS1_eff_max)   ,
@@ -730,10 +792,10 @@ def map_builder(config):
                                     store_hist_s2    = store_hist             ,
                                     ns2_histo_params = config.ns2_histo_params,
                                     nsigmas_Zdst     = config.nsigmas_Zdst    ,
-                                    ref_Z_histo      = ref_histos.
-                                                           Z_dist_hist,
+                                    ref_Z_histo      = ref_histos.Z_dist_hist ,
                                     bootstrapmap     = bootstrapmap           ,
-                                    band_sel_params  = config.band_sel_params )
+                                    band_sel_params  = config.band_sel_params
+                                    )
 
         check_rate_and_hist(times      = dst_passed_cut.time,
                             output_f   = store_hist         ,
@@ -742,7 +804,7 @@ def map_builder(config):
                             **config.rate_histo_params      )
 
         nev_after = dst_passed_cut.event.nunique()
-        ratio     = nev_after/nev_before*100
+        ratio     = nev_after/nev_phys*100
         print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
 
 
@@ -757,17 +819,16 @@ def map_builder(config):
                                  run_number = config.run_number,
                                  XYbins     = (number_of_bins  ,
                                                number_of_bins) ,
+                                 fit_type   = FitType.unbined  ,
                                  **config.map_params           )
 
-    add_krevol(maps  = final_map,
-               dst   = dst,
-               masks_cuts = masks,
-               XYbins     = (number_of_bins  ,
-                             number_of_bins) ,
-               **config.map_params)
+    add_krevol(maps          = final_map,
+               dst           = dst_phys,
+               masks_cuts    = masks,
+               bootstrap_map = bootstrapmap,
+               **config.krevol_params)
 
-    check_drift_v_computation(final_map.t_evol.dv,
-                              **config.map_params)
+    check_drift_v_computation(final_map.t_evol.dv, config.map_params["dv_maxFailed"])
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)

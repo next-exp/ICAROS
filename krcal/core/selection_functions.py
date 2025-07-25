@@ -97,9 +97,9 @@ def get_time_series_df(time_bins    : Number,
     return shift_to_bin_centers(ip), masks
 
 
-def select_xy_sectors_df(dst        : DataFrame,
-                         bins_x     : np.array,
-                         bins_y     : np.array)-> Dict[int, List[DataFrame]]:
+def select_xy_sectors_df(dst    : DataFrame,
+                         bins_x : np.array,
+                         bins_y : np.array)-> Dict[int, List[DataFrame]]:
     """
     Return a DataFrameMap of selections organized by xy sector
     DataFrameMap = Dict[int, List[DataFrame]]
@@ -130,14 +130,14 @@ def select_xy_sectors_df(dst        : DataFrame,
     return dstMap
 
 
-def selection_in_band(z         : np.array,
-                      e         : np.array,
-                      range_z   : Range,
-                      range_e   : Range,
-                      nbins_z   : int     = 50,
-                      nbins_e   : int     = 100,
-                      nsigma    : float   = 3.5) ->Tuple[np.array, FitPar, FitPar,
-                                                         HistoPar2, ProfilePar]:
+def selection_in_band(z       : np.array,
+                      e       : np.array,
+                      range_z : Range,
+                      range_e : Range,
+                      nbins_z : int     = 50,
+                      nbins_e : int     = 100,
+                      nsigma  : float   = 3.5) ->Tuple[np.array, FitPar, FitPar,
+                                                       HistoPar2, ProfilePar]:
     """ This returns a selection of the events that are inside the Kr E vz Z
     returns: np.array(bool)
     """
@@ -148,18 +148,21 @@ def selection_in_band(z         : np.array,
     zc = shift_to_bin_centers(zbins)
 
     sel_e = in_range(e, *range_e)
-    mean, sigma, chi2, ok = fit_slices_1d_gauss(z[sel_e], e[sel_e], zbins, ebins, min_entries=5e2)
+    mean, sigma, chi2, ok = fit_slices_1d_gauss(z[sel_e], e[sel_e], zbins, ebins, min_entries=1e2)
     e_mean  = mean.value
     e_sigma = sigma.value
     # 1. Profile of mean values of e in bins of z
     #zc, e_mean, e_sigma = fitf.profileX(z, e, nbins_z, range_z, range_e)
     #2. Fit two exponentials to e_mmean +- ns_igma * e_sigma defining a band
-    y         = e_mean +  nsigma * e_sigma
-    fph, _, _    = fit_lifetime_unbined(zc, y, nbins_z, range_z)
-    y         = e_mean - nsigma * e_sigma
-    fpl, _, _ = fit_lifetime_unbined(zc, y, nbins_z, range_z)
+    y = e_mean +  nsigma * e_sigma
+    fph, _, _, validh  = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
+
+    y = e_mean - nsigma * e_sigma
+    fpl, _, _, validl  = fit_lifetime_unbined(zc[ok], y[ok], nbins_z, range_z)
     # 3. Select events in the range defined by the band
-    sel_inband = in_range(e, fpl.f(z), fph.f(z))
+    sel_inband = in_range( e
+                         , fpl.f(z) if validl else 0.
+                         , fph.f(z) if validh else np.inf)
 
     hp = HistoPar2(var = z,
                    nbins = nbins_z,
@@ -171,4 +174,3 @@ def selection_in_band(z         : np.array,
     pp = ProfilePar(x = zc, xu = zerror, y = e_mean, yu = e_sigma)
 
     return sel_inband, fpl, fph, hp, pp
-
