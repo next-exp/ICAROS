@@ -118,10 +118,10 @@ def computing_kr_parameters(data           : pd.DataFrame,
                                                data.Z   .values,
                                                data.time.values)
     try:
-        f, _ = quick_gauss_fit(ecorr, bins=70)
-        R    = resolution(f.values, f.errors, 41.5)
+        f = quick_gauss_fit(ecorr, bins=nbins)
+        R = resolution(f.values, f.errors, 41.5)
     except:
-        R    = resolution((np.nan,)*3, (np.nan,)*3, 41.5)
+        R = resolution((np.nan,)*3, (np.nan,)*3, 41.5)
 
     resol, err_resol = R[0][0], R[0][1]
     ## average values
