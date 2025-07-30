@@ -31,9 +31,6 @@ logging.disable(logging.DEBUG)
 this_script_logger = logging.getLogger(__name__)
 this_script_logger.setLevel(logging.INFO)
 
-@fixture(scope="module")
-def t_evol_table(MAPSDIR):
-    return os.path.join(MAPSDIR, 'time_evol_table.h5')
 
 @mark.timeout(None)
 @mark.dependency()
@@ -48,18 +45,21 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
     default_n_bins = 15
     run_number     = 7517
-    config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_params_new = copy.copy(config.as_namespace.map_params)
-    map_params_new['nmin']          = 100
-    map_params_new['nStimeprofile'] = 1200
-    map_params_new['z_range']       = (0, 10000)
-    config.update(dict(folder         = folder_test_dst,
-                       file_in        = test_dst_file  ,
-                       file_out_map   = map_file_out   ,
-                       file_out_hists = histo_file_out ,
-                       default_n_bins = default_n_bins ,
-                       run_number     = run_number     ,
-                       map_params     = map_params_new ))
+    config = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
+    map_params_new    = copy.copy(config.as_namespace.   map_params)
+    krevol_params_new = copy.copy(config.as_namespace.krevol_params)
+    map_params_new   ['nmin']          = 100
+    map_params_new   ['z_range']       = (0, 10000)
+    krevol_params_new['nStimeprofile'] = 1200
+    config.update(dict(folder         = folder_test_dst  ,
+                       file_in        = test_dst_file    ,
+                       file_out_map   = map_file_out     ,
+                       file_out_hists = histo_file_out   ,
+                       default_n_bins = default_n_bins   ,
+                       run_number     = run_number       ,
+                       map_params     = map_params_new   ,
+                       krevol_params  = krevol_params_new))
+
     map_builder(config.as_namespace)
     maps = read_maps(map_file_out)
     assert type(maps)==ASectorMap
@@ -69,6 +69,8 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-1)
     assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5)
     assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-1)
+    assert_dataframes_close(maps.t_evol, old_maps.t_evol, rtol=1e-4)
+
 
 @mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
 def test_time_evol_table_correct_elements(output_maps_tmdir):
@@ -102,13 +104,6 @@ def test_time_evol_eff_less_one(output_maps_tmdir):
     assert np.all(emaps.t_evol.S1eff   <= 1.)
     assert np.all(emaps.t_evol.S2eff   <= 1.)
     assert np.all(emaps.t_evol.Bandeff <= 1.)
-
-@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
-def test_time_evol_table_exact_numbers(t_evol_table, output_maps_tmdir):
-    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
-    emaps        = read_maps(map_file_out)
-    t_evol = pd.pandas.read_hdf(t_evol_table, 't_evol')
-    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-4)
 
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):
@@ -165,7 +160,7 @@ def test_correct_map_with_unsorted_dst(folder_test_dst  ,
 
     default_n_bins = 15
     run_number     = 7517
-    config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    config = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_params_new = config.as_namespace.map_params
     map_params_new['nmin']    = 100
     map_params_new['z_range'] = (0, 10000)
@@ -189,7 +184,7 @@ def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when ns1=1 efficiency is out of range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s1.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s1.h5')
     min_eff_test = 0.
@@ -211,7 +206,7 @@ def test_exception_s2(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when nS2=1 efficiency is out of range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s2.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s2.h5')
     min_eff_test = 0.
@@ -233,7 +228,7 @@ def test_exception_rate(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
     This test checks if exception raises when rate distribution is not flat enough.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_rate.h5')
     n_dev_rate = 0.5
@@ -254,7 +249,7 @@ def test_exception_Zdst(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when Z distribution is not
     similar enough to the reference one.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_Z.h5')
     nsigmas_Zdst = 0.5
@@ -275,7 +270,7 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when band selection efficiency is
     out of a given range.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_bandsel.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_bandsel.h5')
     band_sel_params_new = copy.copy(conf.as_namespace.band_sel_params)
@@ -297,12 +292,11 @@ def test_exception_drift_v(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks that exception raises if drift_v fit
     fails in too many temporal bins.
     """
-    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    conf = configure('maps $ICARO/conf/next-white/config_LBphys.conf'.split())
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_driftv.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_driftv.h5')
     map_params_new = copy.copy(conf.as_namespace.map_params)
     map_params_new['dv_maxFailed'] = 0.01
-    map_params_new['nStimeprofile'] = 100
     run_number = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,

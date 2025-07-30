@@ -42,14 +42,17 @@ def get_number_of_time_bins(nStimeprofile: int,
 
     return ntimebins
 
-def computing_kr_parameters(data       : pd.DataFrame,
-                            ts         : float,
-                            emaps      : ASectorMap,
-                            zslices_lt : int,
-                            zrange_lt  : Tuple[float,float]  = (0, 550),
-                            nbins_dv   : int                 = 35,
-                            zrange_dv  : Tuple[float, float] = (500, 625),
-                            detector   : str                 = 'new')->pd.DataFrame:
+def computing_kr_parameters(data           : pd.DataFrame,
+                            ts             : float,
+                            emaps          : ASectorMap,
+                            bootstrap_map  : ASectorMap,
+                            norm_strategy  : NormStrategy,
+                            zslices_lt     : int,
+                            zrange_lt      : Tuple[float,float],
+                            nbins_dv       : int,
+                            zrange_dv      : Tuple[float, float],
+                            detector       : str,
+                            **norm_options : dict)->pd.DataFrame:
 
     """
     Computes some average parameters (e0, lt, drift v, energy
@@ -63,11 +66,11 @@ def computing_kr_parameters(data       : pd.DataFrame,
     ts: float
         Central time of the distribution.
     emaps: correction map
-        Allows geometrical correction of the energy.
-    xr_map, yr_map: length-2 tuple
-        Set the X/Y-coordinate range of the correction map.
-    nx_map, ny_map: int
-        Set the number of X/Y-coordinate bins for the correction map.
+        Map for self-correcting data in parameter estimation of resolution.
+    bootstrap_map : correction map
+        Reference map for setting the energy scale and monitor its evolution.
+    norm_strategy: NormStrategy
+        Chosen approach for normalization purposes.
     zslices_lt: int
         Number of Z-coordinate bins for doing the exponential fit to compute
         the lifetime.
@@ -83,6 +86,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
     detector: string (optional)
         Used to get the cathode position from DB for the drift velocity
         computation.
+
     Returns
     -------
     pars: DataFrame
@@ -90,13 +94,13 @@ def computing_kr_parameters(data       : pd.DataFrame,
     """
 
     ## lt and e0
-    geo_correction_factor = e0_xy_correction(map           =  emaps,
-                                             norm_strategy = NormStrategy.max)
+    geo_correction_factor = e0_xy_correction(map           = bootstrap_map,
+                                             norm_strategy = norm_strategy,
+                                             **norm_options)
 
     _, _, fr = fit_lifetime_profile(data.Z,
-                                    data.S2e.values*geo_correction_factor(
-                                        data.X.values,
-                                        data.Y.values),
+                                    data.S2e.values*geo_correction_factor(data.X.values,
+                                                                          data.Y.values),
                                     zslices_lt, zrange_lt)
     e0,  lt  = fr.par
     e0u, ltu = fr.err
@@ -106,16 +110,19 @@ def computing_kr_parameters(data       : pd.DataFrame,
                                zrange=zrange_dv, detector=detector)
 
   ## energy resolution and error
-    tot_corr_factor = apply_all_correction(maps = emaps,
-                                           apply_temp=False)
+    tot_corr_factor = apply_all_correction(maps          = emaps,
+                                           apply_temp    = False)
     nbins = int((len(data.S2e))**0.5)
-    f = quick_gauss_fit(data.S2e.values*tot_corr_factor(
-                                  data.X.values,
-                                  data.Y.values,
-                                  data.Z.values,
-                                  data.time.values),
-                        bins=nbins)
-    R = resolution(f.values, f.errors, 41.5)
+    ecorr = data.S2e .values * tot_corr_factor(data.X   .values,
+                                               data.Y   .values,
+                                               data.Z   .values,
+                                               data.time.values)
+    try:
+        f = quick_gauss_fit(ecorr, bins=nbins)
+        R = resolution(f.values, f.errors, 41.5)
+    except:
+        R = resolution((np.nan,)*3, (np.nan,)*3, 41.5)
+
     resol, err_resol = R[0][0], R[0][1]
     ## average values
     parameters = ['S1w', 'S1h', 'S1e',
@@ -123,7 +130,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
                   'Nsipm', 'Xrms', 'Yrms']
     mean_d, var_d = {}, {}
     for parameter in parameters:
-        data_value           = getattr(data, parameter)
+        data_value        = getattr(data, parameter)
         mean_d[parameter] = np.mean(data_value)
         var_d [parameter] = (np.var(data_value)/len(data_value))**0.5
 
@@ -147,19 +154,18 @@ def computing_kr_parameters(data       : pd.DataFrame,
     return pars
 
 
-def kr_time_evolution(ts         : np.array,
-                      masks_time : List[np.array],
-                      dst        : pd.DataFrame,
-                      emaps      : ASectorMap,
-                      xr_map     : Tuple[float, float],
-                      yr_map     : Tuple[float, float],
-                      nx_map     : int,
-                      ny_map     : int,
-                      zslices_lt : int                 = 50,
-                      zrange_lt  : Tuple[float,float]  = (0, 550),
-                      nbins_dv   : int                 = 35,
-                      zrange_dv  : Tuple[float, float] = (500, 625),
-                      detector   : str                 = 'new')->pd.DataFrame:
+def kr_time_evolution(ts            : np.array,
+                      masks_time    : List[np.array],
+                      dst           : pd.DataFrame,
+                      emaps         : ASectorMap,
+                      bootstrap_map : ASectorMap,
+                      norm_strategy : NormStrategy,
+                      zslices_lt    : int,
+                      zrange_lt     : Tuple[float,float],
+                      nbins_dv      : int,
+                      zrange_dv     : Tuple[float, float],
+                      detector      : str,
+                      **norm_options)->pd.DataFrame:
     """
     Computes some average parameters (e0, lt, drift v,
     S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
@@ -206,11 +212,17 @@ def kr_time_evolution(ts         : np.array,
     frames = []
     for index in range(len(masks_time)):
         sel_dst = dst[masks_time[index]]
-        pars    = computing_kr_parameters(sel_dst, ts[index],
-                                          emaps,
-                                          zslices_lt, zrange_lt,
-                                          nbins_dv, zrange_dv,
-                                          detector)
+        pars    = computing_kr_parameters(data          = sel_dst,
+                                          ts            = ts[index],
+                                          emaps         = emaps,
+                                          bootstrap_map = bootstrap_map,
+                                          norm_strategy = norm_strategy,
+                                          zslices_lt    = zslices_lt,
+                                          zrange_lt     = zrange_lt,
+                                          nbins_dv      = nbins_dv,
+                                          zrange_dv     = zrange_dv,
+                                          detector      = detector,
+                                          **norm_options)
         frames.append(pars)
 
     total_pars = pd.concat(frames, ignore_index=True)

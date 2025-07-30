@@ -335,14 +335,13 @@ def test_compute_drift_v_when_moving_edge():
     Nevents = 100 * 1000
     data    = np.random.uniform(450, edge, Nevents)
     data    = np.random.normal(data, 1)
-    dv, dvu = compute_drift_v(data, 60, [500,600],
-                              [1500, 550,1,0], 'new')
+    dv, dvu = compute_drift_v(data, 60, [500,600], "new", [1500, 550,1,0])
     dv_th   = DB.DetectorGeo('new').ZMAX[0]/edge
 
     assert dv_th == approx(dv, abs=5*dvu)
 
 def test_sigmoid_failing_fit_return_nan():
     dst     = np.random.rand(1000)
-    dv_vect = compute_drift_v(dst)
+    dv_vect = compute_drift_v(dst, nbins=35, zrange=(500, 640), seed=None, detector="new")
     nans    = np.array([np.nan, np.nan])
     assert dv_vect, nans

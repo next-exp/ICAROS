@@ -94,10 +94,11 @@ def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
 
 
 def amap_from_tsmap(tsMap      : SectorMapTS,
-                    ts         : int                 =             0,
-                    range_e    : Tuple[float, float] = (5000, 13000),
-                    range_chi2 : Tuple[float, float] = (   0,     3),
-                    range_lt   : Tuple[float, float] = (1800,  3000)) -> ASectorMap:
+                    ts         : int,
+                    range_e    : Tuple[float, float],
+                    range_chi2 : Tuple[float, float],
+                    range_lt   : Tuple[float, float],
+                    )-> ASectorMap:
     """
     Obtain the correction maps for time bin ts.
 
