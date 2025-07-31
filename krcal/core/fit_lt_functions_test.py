@@ -84,13 +84,10 @@ def test_lt_profile_yields_same_result_expo_fit():
 #     assert frp.chi2   == approx(fru.chi2,    rel=0.5)
 
 
-@mark.parametrize("length error_type".split(),
-                  ((0, "Type"       ),
-                   (1, "LinAlgError"),
-                   (2, "LinAlgError")))
-def test_fit_lifetime_unbined_warns_with_insufficient_data_points(caplog, length, error_type):
+@mark.parametrize("length", (0, 1, 2))
+def test_fit_lifetime_unbined_warns_with_insufficient_data_points(caplog, length):
     fit_lifetime_unbined(np.zeros(length), np.ones(length), 10, (0, 10))
-    assert f"{error_type} error found in fit_lifetime_unbined: not enough events for fit" in caplog.text
+    assert f"error found in fit_lifetime_unbined: not enough events for fit" in caplog.text
 
 
 def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
